@@ -104,12 +104,12 @@ class Chat:
         """
         Lancement de la conversation dans le terminal
         """
-        print(chat.respond())
-        while not chat.are_params_set():
+        print(self.respond())
+        while not self.are_params_set():
             sentence = input('> ')
-            chat.parse(sentence)
-            print(chat.respond())
-        print(chat.get_offers().to_string())
+            self.parse(sentence)
+            print(self.respond())
+        print(self.get_offers().to_string())
 
 if __name__ == '__main__':
     chat = Chat(afkl.Context(api_key_file='./api_key.txt', accept_language='us-US'))
