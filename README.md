@@ -3,14 +3,7 @@ Projet de recommandation de voyage en avion par chatbot.
 On se limitera uniquement à une aide informative et pas à une véritable réservation.
 Il serait possible dans une moindre mesure de rediriger le client vers l'interface web de réservation.
 
-**Étudiants** :
-* Maxime VINCENT
-* Abderrahim BENMELOUKA
-* Loris PONROY
-* Lina SAICHI
-* Myriem MOULOUEL
-* Syrine MARZOUGUI
-
+* **Étudiants** : Maxime VINCENT, Abderrahim BENMELOUKA, Loris PONROY, Lina SAICHI , Myriem MOULOUEL, Syrine MARZOUGUI
 * **Module** : Projet Apprentissage
 * **Enseignant** : [Sylvain Conchon](https://www.lri.fr/~conchon/)
 * **Formation** : M1 ISD Apprentissage
