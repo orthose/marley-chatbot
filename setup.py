@@ -6,8 +6,8 @@ setup(
     description='',
     url='https://github.com/orthose/marley-chatbot',
     author='Maxime VINCENT, Abderrahim BENMELOUKA, Loris PONROY, Lina SAICHI, Myriem MOULOUEL, Syrine MARZOUGUI',
-    keywords='chatbot, airfrance, klm, flights',
+    keywords='chatbot, airfrance, klm, flights, marley',
     packages=find_packages(),
     python_requires='>=3.8',
-    install_requires=['api-airfranceklm', 'nltk']
+    install_requires=['api-airfranceklm', 'nltk', 'discord', 'python-dotenv', 'pandas', 'parsedatetime', 'spacy']
 )

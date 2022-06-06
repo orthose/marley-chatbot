@@ -1,15 +1,20 @@
-import os
 import traceback
-import marley_chatbot as marley
-import api_airfranceklm.utils as afkl
-import discord
-#from dotenv import load_dotenv
-#from marley import parse
 
+import discord
+import nltk
+from dotenv import get_key
+
+import api_airfranceklm.utils as afkl
+import marley_chatbot as marley
+
+nltk.download("punkt")
+nltk.download("averaged_perceptron_tagger")
+nltk.download('maxent_treebank_pos_tagger')
 
 client = discord.Client()
-CHANELS = []
-chats = marley.MultiChat(afkl.Context(api_key_file='./api_key.txt', accept_language='us-US'))
+CHANELS = ["spam"]
+chats = marley.MultiChat(afkl.Context(api_key=get_key(".env", "API_KEY"), accept_language='us-US'))
+
 
 @client.event
 async def on_ready():
@@ -22,7 +27,7 @@ async def on_message(message):
     try:
         if message.author == client.user:
             return
-        if str(message.channel) != "spam":
+        if str(message.channel) not in CHANELS:
             return
 
         content = message.content
@@ -40,17 +45,9 @@ async def on_message(message):
             await message.reply(chats.get_offers(user).to_string())
         else:
             await message.reply(chats.respond(user))
-
-        #data = parse(content)
-        #await message.reply(str(data))
-
-
-        pass
     except Exception:
         traceback.print_exc()
-        await message.reply("500: Internal Error")
+        await message.reply("An error occurred, please try again later")
 
 
-#load_dotenv()
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-client.run(BOT_TOKEN)
+client.run(get_key(".env", "BOT_TOKEN"))
