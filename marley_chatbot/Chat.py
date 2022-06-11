@@ -81,6 +81,12 @@ class Chat:
         self.response, self.response_type = self._build_response()
         self.context_afkl = context_afkl
 
+    def reset(self):
+        """
+        Remise à zéro du chatbot pour préparer une nouvelle requête
+        """
+        self.__init__(self.context_afkl)
+
     def are_params_set(self) -> bool:
         """
         Les paramètres obligatoires ont-ils été entrés ?
@@ -129,14 +135,19 @@ class Chat:
         :param top_offers: Nombre d'offres à afficher
         :return: Réponse du chatbot sous forme d'une string
         """
+        assert top_offers >= 1
+
         offers = self.__get_offers()
         if debug:
             print(offers.to_string())
         # On sélectionne uniquement quelques offres pour éviter de dépasser
         # la taille maximale de message dans Discord
-        offers = offers.iloc[0:min(len(offers), top_offers)]
+        top_offers = min(len(offers), top_offers)
+        offers = offers.iloc[0:top_offers]
 
-        res = f"These are the top {top_offers} cheapest flights I can offer you from {self.departure_city} to {self.arrival_city}.\n\n"
+        res = 'There is only one flight available ' if top_offers == 1 else f"These are the top {top_offers} cheapest flights "
+        res += f"I can offer you from {self.departure_city} to {self.arrival_city}.\n\n"
+
         for i in range(len(offers)):
             offer = offers.iloc[i]
             departure_datetime = offer['departure_datetime']
@@ -153,6 +164,7 @@ class Chat:
                 + f"Its price is {price} {'€' if currency == 'EUR' else currency}.\n\n"
             )
 
+        self.reset()
         return '```md\n' + res + '```'
 
     def _parse_date(self, sentence: str):
