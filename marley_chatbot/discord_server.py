@@ -12,7 +12,7 @@ nltk.download("averaged_perceptron_tagger")
 nltk.download('maxent_treebank_pos_tagger')
 
 client = discord.Client()
-CHANELS = ["spam"]
+CHANELS = [get_key(".env", "DISCORD_CHANEL")]
 chats = marley.MultiChat(afkl.Context(api_key=get_key(".env", "API_KEY"), accept_language='us-US'))
 
 
@@ -32,20 +32,22 @@ async def on_message(message):
 
         content = message.content
 
-        if content == "!ping":
-            await message.reply("pong")
-            return
-
         user = message.author.id
+        # Enregistrement d'un nouvel utilisateur
         if not chats.is_registered(user):
             chats.register(user)
 
+        # Analyse du message de l'utilisateur
         chats.parse(user, content)
+
+        # Si tous les paramètres sont entrés
+        # Affichage des offres disponibles
         if chats.are_params_set(user):
             offers = chats.get_offers(user)
             await message.reply(offers)
         else:
             await message.reply(chats.respond(user))
+
     except Exception:
         traceback.print_exc()
         await message.reply("An error occurred, please try again later")

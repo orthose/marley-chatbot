@@ -53,3 +53,29 @@ Les données de vol sont issues de l'API Rest Airfrance KLM. Nous avons dévelop
 [api_airfranceklm](https://github.com/orthose/api-airfranceklm-python-sdk) pour la requêter.
 Nous utilisons la bibliothèque [NLTK](https://www.nltk.org/) en Python pour faire l’analyse de texte.
 Le chatbot est hébergé sur un serveur [Discord](https://discord.com/) qui servira d'interface utilisateur.
+
+# Utilisation
+Je vous conseille d'utiliser un [environnement virtuel](https://docs.python.org/3/library/venv.html).
+On commence par installer les dépendances du projet.
+```commandline
+pip install -r requirements.txt
+```
+
+Il faut ensuite configurer les variables d'environnement. Pour cela on crée un fichier `.env` dans le dossier `marley_chatbot`.
+Voici un exemple ci-dessous. Il faut évidemment le remplir avec le token du bot discord et la clé d'API de Airfrance KLM.
+Le nom de canal choisi sera celui sur lequel le bot attendra les messages des utilisateurs.
+Le chemin vers l'archive de Stanford ne doit pas être modifié car il est inclus dans le dépôt.
+Cependant, le chemin vers la virtual machine Java doit être adapté en fonction de votre système.
+```
+BOT_TOKEN=...
+DISCORD_CHANEL=spam
+JAVA_PATH=/opt/java/jdk-11.0.3/bin
+STANFORD_PATH=stanford-ner-2020-11-17
+API_KEY=...
+```
+
+Enfin on lance le programme principal qui est un serveur qui va intercepter les messages des utilisateurs Discord.
+```commandline
+cd marley_chatbot
+python3 discord_server.py
+```

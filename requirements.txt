@@ -1,0 +1,7 @@
+git+https://github.com/orthose/api-airfranceklm-python-sdk.git
+nltk
+discord
+python-dotenv
+pandas
+parsedatetime
+spacy
