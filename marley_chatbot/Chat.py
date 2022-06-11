@@ -1,13 +1,11 @@
 import os
 import re
 from enum import Enum
-
 import nltk
 from dotenv import get_key
-
 from api_airfranceklm.open_data import offers
 import api_airfranceklm.utils as afkl
-from typing import Optional
+from typing import Optional, Tuple
 import pandas as pd
 from datetime import datetime
 from nltk.tag import StanfordNERTagger
@@ -95,14 +93,14 @@ class Chat:
                 and self.return_date is not None
         )
 
-    def get_offers(self) -> pd.DataFrame:
+    def __get_offers(self) -> pd.DataFrame:
         """
         Requête à l'API Airfrance KLM en fonction des paramètres entrés
         :return: Dataframe Pandas des offres disponibles
         """
         ref = offers.reference_data(context=self.context_afkl)
-        code_departure = ref[ref["location_name"] == self.departure_city]["location_code"]
-        code_arrival = ref[ref["location_name"] == self.arrival_city]["location_code"]
+        code_departure = ref[ref["location_name"] == self.departure_city].iloc[0]["location_code"]
+        code_arrival = ref[ref["location_name"] == self.arrival_city].iloc[0]["location_code"]
         connections = [afkl.Connection(
             departure_date=self.departure_date,
             departure_location=afkl.Location(type=afkl.LocationType.CITY, code=code_departure),
@@ -123,6 +121,39 @@ class Chat:
             verbose=True)
 
         return res
+
+    def get_offers(self, top_offers=3, debug=True) -> str:
+        """
+        Construit la phrase de réponse du chatbot avec le top 3 des offres disponibles
+        en fonction des paramètres entrés par l'utilisateur
+        :param top_offers: Nombre d'offres à afficher
+        :return: Réponse du chatbot sous forme d'une string
+        """
+        offers = self.__get_offers()
+        if debug:
+            print(offers.to_string())
+        # On sélectionne uniquement quelques offres pour éviter de dépasser
+        # la taille maximale de message dans Discord
+        offers = offers.iloc[0:min(len(offers), top_offers)]
+
+        res = f"These are the top {top_offers} cheapest flights I can offer you from {self.departure_city} to {self.arrival_city}.\n\n"
+        for i in range(len(offers)):
+            offer = offers.iloc[i]
+            departure_datetime = offer['departure_datetime']
+            arrival_datetime = offer['arrival_datetime']
+            departure_airport = offer['departure_airport_name']
+            arrival_airport = offer['arrival_airport_name']
+            number_connections = offer['number_segments'] - 1
+            price = offer['total_price']
+            currency = offer['currency']
+            res += (
+                f"{i + 1}. You can depart at {departure_datetime} from {departure_airport} and arrive at {arrival_datetime} at {arrival_airport}. "
+                + ("This route is without connection. " if number_connections == 0
+                   else f"There {'is' if number_connections == 1 else 'are'} {number_connections} connection{'' if number_connections == 1 else 's'} for this route. ")
+                + f"Its price is {price} {'€' if currency == 'EUR' else currency}.\n\n"
+            )
+
+        return '```md\n' + res + '```'
 
     def _parse_date(self, sentence: str):
         cal = pdt.Calendar()
@@ -189,7 +220,7 @@ class Chat:
         self._parse_cities(sentence)
         self._parse_date(sentence)
 
-    def _build_response(self) -> tuple[str, ResponseType]:
+    def _build_response(self) -> Tuple[str, ResponseType]:
         missing_data = []
         if self.departure_city is None:
             missing_data.append("departure_city")

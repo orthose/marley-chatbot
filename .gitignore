@@ -4,3 +4,4 @@ dist/
 build/
 *.egg-info
 api_key.txt
+marley_chatbot/.env
