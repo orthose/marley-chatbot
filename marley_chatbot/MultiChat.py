@@ -32,17 +32,3 @@ class MultiChat:
 
     def respond(self, user) -> str:
         return self.chats[user].respond()
-
-
-if __name__ == '__main__':
-    chats = MultiChat(afkl.Context(api_key_file='./api_key.txt', accept_language='us-US'))
-    chats.register('maxime')
-    print('maxime>', chats.respond('maxime'))
-    print('maxime> Hello World!')
-    chats.parse('maxime', 'Hello World!')
-    chats.register('rahim')
-    print('rahim>', chats.respond('rahim'))
-    print('rahim> World Hello!')
-    chats.parse('rahim', 'World Hello!')
-    print('maxime>', chats.respond('maxime'))
-    print(chats.get_offers('maxime').to_string())

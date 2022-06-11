@@ -11,6 +11,7 @@ from datetime import datetime
 from nltk.tag import StanfordNERTagger
 import en_core_web_sm
 import parsedatetime as pdt
+from dotenv import get_key
 
 java_path = get_key(".env", "JAVA_PATH")
 os.environ['JAVAHOME'] = java_path
@@ -310,5 +311,5 @@ class Chat:
 
 
 if __name__ == '__main__':
-    chat = Chat(afkl.Context(api_key_file='./api_key.txt', accept_language='us-US'))
+    chat = Chat(afkl.Context(api_key=get_key('.env', 'API_KEY'), accept_language='us-US'))
     chat.converse()
