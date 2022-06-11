@@ -50,6 +50,7 @@ class ResponseType(Enum):
     ASKING_HAS_RETURN = 5
     ASKING_RETURN_DATE = 6
     ASKING_CONFIRMATION = 7
+    CONFIRMED = 8
 
 
 class Chat:
@@ -100,11 +101,13 @@ class Chat:
                 and self.return_date is not None
         )
 
+    # TODO: Fusionner __get_offers et get_offers
     def __get_offers(self) -> pd.DataFrame:
         """
         Requête à l'API Airfrance KLM en fonction des paramètres entrés
         :return: Dataframe Pandas des offres disponibles
         """
+        # TODO: Si il y a une erreur car la location n'existe pas il faut changer l'état du chatbot
         ref = offers.reference_data(context=self.context_afkl)
         code_departure = ref[ref["location_name"] == self.departure_city].iloc[0]["location_code"]
         code_arrival = ref[ref["location_name"] == self.arrival_city].iloc[0]["location_code"]
@@ -120,6 +123,7 @@ class Chat:
                 departure_location=afkl.Location(type=afkl.LocationType.CITY, code=code_arrival),
                 arrival_location=afkl.Location(type=afkl.LocationType.CITY, code=code_departure)))
 
+        # TODO: Ratrapper les erreurs qui peuvent se produire ici en changeant l'état du chatbot
         res = offers.all_available_offers(
             context=self.context_afkl,
             connections=connections,
@@ -141,16 +145,20 @@ class Chat:
         offers = self.__get_offers()
         if debug:
             print(offers.to_string())
+
+        not_return_ticket = self.return_date is None or not self.return_date
+
         # On sélectionne uniquement quelques offres pour éviter de dépasser
         # la taille maximale de message dans Discord
-        top_offers = min(len(offers), top_offers)
+        factor = 1 if not_return_ticket else 2
+        top_offers = min(len(offers), top_offers * factor)
         offers = offers.iloc[0:top_offers]
+        top_offers //= factor
 
         res = 'There is only one flight available ' if top_offers == 1 else f"These are the top {top_offers} cheapest flights "
-        res += f"I can offer you from {self.departure_city} to {self.arrival_city}.\n\n"
+        res += f"I can offer you from {self.departure_city} to {self.arrival_city}{'' if not_return_ticket else ' with a return ticket'}.\n\n"
 
-        for i in range(len(offers)):
-            offer = offers.iloc[i]
+        def response_offer(offer: pd.Series) -> str:
             departure_datetime = offer['departure_datetime']
             arrival_datetime = offer['arrival_datetime']
             departure_airport = offer['departure_airport_name']
@@ -158,12 +166,33 @@ class Chat:
             number_connections = offer['number_segments'] - 1
             price = offer['total_price']
             currency = offer['currency']
-            res += (
-                f"{i + 1}. You can depart at {departure_datetime} from {departure_airport} and arrive at {arrival_datetime} at {arrival_airport}. "
-                + ("This route is without connection. " if number_connections == 0
-                   else f"There {'is' if number_connections == 1 else 'are'} {number_connections} connection{'' if number_connections == 1 else 's'} for this route. ")
-                + f"Its price is {price} {'€' if currency == 'EUR' else currency}.\n\n"
-            )
+
+            return (f"You can depart at {departure_datetime} from {departure_airport} and arrive at {arrival_datetime} at {arrival_airport}. "
+            + ("This route is without connection. " if number_connections == 0
+            else f"There {'is' if number_connections == 1 else 'are'} {number_connections} connection{'' if number_connections == 1 else 's'} for this route. ")
+            + f"Its price is {price} {'€' if currency == 'EUR' else currency}.")
+
+        # Aller simple
+        if not_return_ticket:
+            for i in range(len(offers)):
+                offer = offers.iloc[i]
+                res += f"{i + 1}. " + response_offer(offer) + '\n\n'
+
+        # Billet de retour demandé
+        else:
+            for i in range(0, len(offers), 2):
+                offer1 = offers.iloc[i]
+                offer2 = offers.iloc[i + 1]
+                price1 = offer1['total_price']
+                currency1 = offer1['currency']
+                price2 = offer2['total_price']
+                currency2 = offer2['currency']
+                assert currency1 == currency2
+                price = price1 + price2
+                res += f"{i + 1}. " + response_offer(offer1)
+                res += 'Then for the return journey let me see... '
+                res += response_offer(offer2)
+                res += f"The total round trip is {price} {'€' if currency1 == 'EUR' else currency1}.\n\n"
 
         self.reset()
         return '```md\n' + res + '```'
@@ -232,6 +261,7 @@ class Chat:
         """
         self._parse_cities(sentence)
         self._parse_date(sentence)
+        self.response, self.response_type = self._build_response()
 
     def _build_response(self) -> Tuple[str, ResponseType]:
         missing_data = []
@@ -282,12 +312,13 @@ class Chat:
             else:
                 response += ["Okay, so you want to go"]
             response += [
-                "from", self.departure_city,
-                "to", self.arrival_city,
-                "on the", self.departure_date,
-            ] + (['and return on the', self.return_date] if self.return_date else [])
+                            "from", self.departure_city,
+                            "to", self.arrival_city,
+                            "on the", str(self.departure_date),
+                        ] + (['and return on the', str(self.return_date)] if self.return_date else [])
             response = " ".join(response) + ", is that correct ?"
             response_type = ResponseType.ASKING_CONFIRMATION
+            # TODO: Si CONFIRMED appeler la fonction get_offers dans ce cas là changer l'interface pour ne plus appeler get_offers depuis l'extérieur
         return response, response_type
 
     def respond(self) -> str:
@@ -295,13 +326,13 @@ class Chat:
         Réponse du chatbot en fonction du dernier parsing
         :return: Réponse actuelle du chatbot
         """
-        self.response, self.response_type = self._build_response()
         return self.response
 
     def converse(self):
         """
         Lancement de la conversation dans le terminal
         """
+        # TODO: Faire une boucle infinie et ne plus appeler get_offers
         print(self.respond())
         while not self.are_params_set():
             sentence = input('> ')
@@ -310,6 +341,7 @@ class Chat:
         print(self.get_offers().to_string())
 
 
+# Pour tester le chatbot dans le terminal
 if __name__ == '__main__':
     chat = Chat(afkl.Context(api_key=get_key('.env', 'API_KEY'), accept_language='us-US'))
     chat.converse()
