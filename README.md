@@ -34,18 +34,18 @@ Les paramètres principaux ci-dessous pourront être enrichis au besoin avec des
 * Nombre de passagers (1 par défaut)
 
 # Exemple de discussion
-**Client**: “I want to go to Berlin”
-**Bot**: “Okay, from where ?”
-**Client**: “From Paris”
-**Bot**: “So you want to go from Paris to Berlin, at what date ?”
-**Client**: “The first of May”
-**Bot**: “Noted, do you want to look for a return trip as well ?”
-**Client**: “Yes, for the 5th of May”
+**Client**: “I want to go to Berlin”\
+**Bot**: “Okay, from where ?”\
+**Client**: “From Paris”\
+**Bot**: “So you want to go from Paris to Berlin, at what date ?”\
+**Client**: “The first of May”\
+**Bot**: “Noted, do you want to look for a return trip as well ?”\
+**Client**: “Yes, for the 5th of May”\
 **Bot**: “Alright, I should look for tickets from Paris to Berlin on the 1st of May with a return date
-on 5th of May, correct ?”
-**Client**: “Yes”
-**Bot**: “Searching now...”
-**Bot**: “Here are your results”
+on 5th of May, correct ?”\
+**Client**: “Yes”\
+**Bot**: “Searching now...”\
+**Bot**: “Here are your results”\
 << Le bot affiche des résultats >>
 
 # Environnement technique
