@@ -74,7 +74,6 @@ class Chat:
         :param departure_date: Date de départ
         :param return_date: Date de retour
         """
-        self.started = False
         self.departure_city = departure_city
         self.arrival_city = arrival_city
         self.departure_date = departure_date
@@ -94,12 +93,7 @@ class Chat:
         Les paramètres obligatoires ont-ils été entrés ?
         :return: True si tous les paramètres obligatoires ont été parsés False sinon
         """
-        return (
-                self.departure_city is not None
-                and self.arrival_city is not None
-                and self.departure_date is not None
-                and self.return_date is not None
-        )
+        return self.response_type == ResponseType.CONFIRMED
 
     # TODO: Fusionner __get_offers et get_offers
     def __get_offers(self) -> pd.DataFrame:
@@ -252,6 +246,27 @@ class Chat:
         if arrival_count > 1:
             self.arrival_city = None
 
+    def _parse_confirmation(self, sentence: str):
+        tokens = tagger.tag(nltk.word_tokenize(sentence))
+        affirmative_tokens = ["yes", "yeah", "sure", "okay"]
+        affirmative_score = 0
+        negative_tokens = ["no", "nope", "not", "never", "nevermind"]
+        negative_score = 0
+        for token, tag in tokens:
+            if token.lower() in affirmative_tokens:
+                affirmative_score += 1
+            if token.lower() in negative_tokens:
+                negative_score += 1
+        score = affirmative_score / (affirmative_score + negative_score)
+        neutrality = 1/3
+        if neutrality < score < 1-neutrality:
+            self.response_type = ResponseType.ASKING_CONFIRMATION
+        elif score >= 1-neutrality:
+            self.response_type = ResponseType.CONFIRMED
+        else:
+            self.reset()
+
+
     def parse(self, sentence: str):
         """
         Parse la phrase entrée par l'utilisateur en extrayant les paramètres
@@ -259,9 +274,22 @@ class Chat:
         ou si une erreur de parsing est détectée
         :param sentence: Phrase entrée par l'utilisateur
         """
-        self._parse_cities(sentence)
-        self._parse_date(sentence)
-        self.response, self.response_type = self._build_response()
+        if self.response_type in [
+            ResponseType.ASKING_ALL,
+            ResponseType.ASKING_DEPARTURE_CITY,
+            ResponseType.ASKING_ARRIVAL_CITY,
+        ]:
+            self._parse_cities(sentence)
+
+        if self.response_type in [
+            ResponseType.ASKING_ALL,
+            ResponseType.ASKING_DEPARTURE_DATE,
+            ResponseType.ASKING_RETURN_DATE,
+        ]:
+            self._parse_date(sentence)
+
+        if self.response_type == ResponseType.ASKING_CONFIRMATION:
+            self._parse_confirmation(sentence)
 
     def _build_response(self) -> Tuple[str, ResponseType]:
         missing_data = []
@@ -326,6 +354,7 @@ class Chat:
         Réponse du chatbot en fonction du dernier parsing
         :return: Réponse actuelle du chatbot
         """
+        self.response, self.response_type = self._build_response()
         return self.response
 
     def converse(self):

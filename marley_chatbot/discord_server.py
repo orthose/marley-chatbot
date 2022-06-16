@@ -12,7 +12,7 @@ nltk.download("averaged_perceptron_tagger")
 nltk.download('maxent_treebank_pos_tagger')
 
 client = discord.Client()
-CHANELS = [get_key(".env", "DISCORD_CHANEL")]
+CHANNELS = ["spam"]
 chats = marley.MultiChat(afkl.Context(api_key=get_key(".env", "API_KEY"), accept_language='us-US'))
 
 
@@ -27,7 +27,7 @@ async def on_message(message):
     try:
         if message.author == client.user:
             return
-        if str(message.channel) not in CHANELS:
+        if str(message.channel) not in CHANNELS:
             return
 
         content = message.content
