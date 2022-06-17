@@ -1,15 +1,23 @@
+import importlib
 import traceback
 import discord
 import nltk
+import spacy
 from dotenv import get_key
 import api_airfranceklm.utils as afkl
 import marley_chatbot as marley
 
 # Si les installations ne sont pas exécutées correctement
 # Il faut les réaliser manuellement dans un interpréteur Python
-nltk.download("punkt")
-nltk.download("averaged_perceptron_tagger")
-nltk.download('maxent_treebank_pos_tagger')
+try:
+    nltk.data.find("tokenizers/punkt")
+except LookupError:
+    nltk.download("punkt")
+    nltk.download("averaged_perceptron_tagger")
+    nltk.download('maxent_treebank_pos_tagger')
+
+if importlib.util.find_spec("en_core_web_sm") is None:
+    spacy.cli.download("en_core_web_sm")
 
 client = discord.Client()
 CHANNELS = ["spam"]
