@@ -20,7 +20,8 @@ if importlib.util.find_spec("en_core_web_sm") is None:
     spacy.cli.download("en_core_web_sm")
 
 client = discord.Client()
-CHANNELS = ["spam"]
+# Canal d'écoute à modifier dans .env pour éviter le versionnement
+CHANNELS = [get_key('.env', 'DISCORD_CHANNEL')]
 chats = marley.MultiChat(afkl.Context(api_key=get_key(".env", "API_KEY"), accept_language='us-US'))
 
 

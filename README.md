@@ -56,6 +56,12 @@ Le chatbot est hébergé sur un serveur [Discord](https://discord.com/) qui serv
 
 # Utilisation
 Je vous conseille d'utiliser un [environnement virtuel](https://docs.python.org/3/library/venv.html).
+```shell
+python3 -m venv venv
+source venv/bin/activate
+deactivate # Pour désactiver ne pas utiliser immédiatement
+```
+
 On commence par installer les dépendances du projet.
 ```commandline
 pip install -r requirements.txt
@@ -77,5 +83,5 @@ API_KEY=...
 Enfin on lance le programme principal qui est un serveur qui va intercepter les messages des utilisateurs Discord.
 ```commandline
 cd marley_chatbot
-python3 discord_server.py
+PYTHONPATH=/path/to/marley-chatbot python3 discord_server.py
 ```

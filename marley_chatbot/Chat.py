@@ -4,7 +4,6 @@ import re
 from enum import Enum
 import nltk
 import spacy
-from dotenv import get_key
 from api_airfranceklm.open_data import offers
 import api_airfranceklm.utils as afkl
 from typing import Optional, Tuple
